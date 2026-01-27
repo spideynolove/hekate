@@ -43,6 +43,45 @@ cp src/hekate/config.yaml ~/.hekate/
 nano ~/.hekate/config.yaml
 ```
 
+## Prerequisites
+
+Hekate requires three external tools for full functionality:
+
+### 1. Beads CLI (Required)
+Task management system for AI agent orchestration.
+
+```bash
+# Install via Homebrew
+brew install beads
+
+# Or via Go
+go install github.com/steveyegge/beads/cmd/bd@latest
+
+# Verify
+bd --version
+```
+
+### 2. Superpowers Plugin (Required)
+Claude Code plugin for TDD enforcement and quality gates.
+
+```bash
+# Install via Claude Code
+claude plugin add superpowers
+
+# Verify
+claude plugin list | grep superpowers
+```
+
+### 3. MCPorter (Optional - Recommended)
+Token optimization, reduces usage by ~43%.
+
+```bash
+npm install -g @mcporter/mcporter
+mcporter init
+```
+
+For detailed setup, see [CLAUDE.md](CLAUDE.md).
+
 ## Quick Start
 
 1. **Configure your provider functions** (add to ~/.bashrc):

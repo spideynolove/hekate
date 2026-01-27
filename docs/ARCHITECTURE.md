@@ -4,6 +4,18 @@
 
 The Multi-Layer AI Agent System orchestrates 14 specialized AI agents across 4 providers (Claude, GLM, DeepSeek, OpenRouter) to autonomously execute development tasks. The system uses Beads for task orchestration, Redis for state management, and implements quality gates through staged verification.
 
+## Prerequisites
+
+Hekate requires the following external tools to be installed separately:
+
+| Tool | Purpose | Installation | Required |
+|------|---------|--------------|----------|
+| **Beads CLI** | Task orchestration | `brew install beads` or `go install github.com/steveyegge/beads/cmd/bd@latest` | Yes |
+| **Superpowers** | TDD enforcement, quality gates | `claude plugin add superpowers` | Yes |
+| **MCPorter** | Token optimization (43% reduction) | `npm install -g @mcporter/mcporter` | Optional |
+
+See [CLAUDE.md](../CLAUDE.md) for detailed installation instructions.
+
 ## Core Components
 
 ### Supervisor (`supervisor.py`)

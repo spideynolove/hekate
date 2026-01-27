@@ -43,8 +43,119 @@ hekate --health-check  # or ~/.local/bin/hekate-health-check
 
 ## Environment Setup
 
-Requires Python 3.11+, Redis 7+, Beads CLI, MCPorter, and Superpowers plugin.
+Requires Python 3.10+, Redis 7+, and external tools (Beads CLI, Superpowers, MCPorter).
 
-Virtual environment setup: Use UV with `uv venv` and `uv pip install -e .`
+### Prerequisites Installation
 
-API keys configured via `~/.bashrc` functions (deepseek, glm, opr) and supervisor/.env
+Hekate requires three external tools to be installed separately:
+
+#### 1. Beads CLI
+Task management system for AI agents. Required for epic/task orchestration.
+
+```bash
+# Option A: Install via Homebrew (macOS/Linux)
+brew install beads
+
+# Option B: Install via Go
+go install github.com/steveyegge/beads/cmd/bd@latest
+
+# Option C: From source
+git clone https://github.com/steveyegge/beads.git
+cd beads && cargo install --path cli
+
+# Verify installation
+bd --version
+```
+
+[Documentation](https://github.com/steveyegge/beads)
+
+#### 2. Superpowers Plugin
+Claude Code plugin for autonomous development enforcement (TDD, quality gates).
+
+```bash
+# Install via Claude Code plugin marketplace
+claude plugin add superpowers
+
+# Or install from GitHub
+claude plugin install https://github.com/anthropics/claude-code-plugins
+
+# Verify installation
+claude plugin list | grep superpowers
+```
+
+[Documentation](https://github.com/anthropics/claude-code/blob/main/plugins/README.md)
+
+#### 3. MCPorter (Optional)
+Token optimization for on-demand MCP tool invocation. Reduces token usage by ~43%.
+
+```bash
+# Install via npm
+npm install -g @mcporter/mcporter
+
+# Or install locally
+npm install @mcporter/mcporter
+
+# Initialize configuration
+mcporter init
+
+# Verify installation
+mcporter --version
+```
+
+[Documentation](https://github.com/steipete/mcporter)
+
+### Hekate Installation
+
+```bash
+# Clone repository
+git clone https://github.com/spideynolove/hekate.git
+cd hekate
+
+# Create virtual environment
+uv venv
+source .venv/bin/activate
+
+# Install Hekate
+uv pip install -e .
+
+# Copy default config
+mkdir -p ~/.hekate
+cp src/hekate/config.yaml ~/.hekate/
+
+# Edit config with your API keys
+nano ~/.hekate/config.yaml
+```
+
+### API Keys Configuration
+
+Configure provider functions in `~/.bashrc`:
+
+```bash
+# Source secrets (optional - if you keep keys separate)
+if [ -f ~/.secrets ]; then
+    source ~/.secrets
+fi
+
+# DeepSeek (free tier)
+deepseek() {
+    export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
+    export ANTHROPIC_AUTH_TOKEN="${DEEPSEEK_API_KEY}"
+    claude "$@"
+}
+
+# Z.AI GLM (medium tier)
+glm() {
+    export ANTHROPIC_BASE_URL="https://api.z.ai/api/anthropic"
+    export ANTHROPIC_AUTH_TOKEN="${Z_AI_API_KEY}"
+    claude "$@"
+}
+
+# OpenRouter (fallback/API)
+opr() {
+    export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+    export ANTHROPIC_AUTH_TOKEN="${OPENROUTER_API_KEY}"
+    claude "$@"
+}
+```
+
+Then reload: `source ~/.bashrc`

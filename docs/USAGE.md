@@ -1,5 +1,15 @@
 # Usage Guide
 
+## Prerequisites
+
+Before using Hekate, ensure you have installed:
+
+- **Beads CLI**: `brew install beads` or `go install github.com/steveyegge/beads/cmd/bd@latest`
+- **Superpowers**: `claude plugin add superpowers` (for TDD enforcement)
+- **MCPorter** (optional): `npm install -g @mcporter/mcporter` (for token optimization)
+
+See [CLAUDE.md](../CLAUDE.md) for detailed setup instructions.
+
 ## Creating an Epic
 
 1. **Initialize Beads project:**
