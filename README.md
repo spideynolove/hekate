@@ -10,7 +10,7 @@ Autonomous development system with Beads orchestration, provider routing, and qu
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone repository
-git clone https://github.com/yourusername/hekate.git
+git clone https://github.com/spideynolove/hekate.git
 cd hekate
 
 # Install with UV
@@ -21,7 +21,7 @@ uv run hekate --help
 ### Using pip
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/hekate.git
+git clone https://github.com/spideynolove/hekate.git
 cd hekate
 
 # Install system-wide

@@ -3,7 +3,8 @@ from pathlib import Path
 import yaml
 
 def test_config_loads_yaml():
-    config_path = Path(__file__).parent.parent / "config.yaml"
+    # Path from tests/ to hekate/ package
+    config_path = Path(__file__).parent.parent / "hekate" / "config.yaml"
     assert config_path.exists()
 
     with open(config_path) as f:

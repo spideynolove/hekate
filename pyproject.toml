@@ -47,7 +47,7 @@ docs = [
 ]
 
 [project.scripts]
-hekate = "hekate.main:main"
+hekate = "hekate.main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hekate"]
@@ -69,7 +69,7 @@ disallow_incomplete_defs = true
 [tool.pytest.ini_options]
 minversion = "7.4"
 addopts = "-ra -q"
-testpaths = ["tests"]
+testpaths = ["src/tests"]
 filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
