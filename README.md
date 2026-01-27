@@ -99,7 +99,7 @@ systemctl stop ai-agent-supervisor
 
 ### Health Check
 ```bash
-/home/hung/ai-agents/scripts/health-check.sh
+~/.local/bin/hekate-health-check  # or wherever you installed it
 ```
 
 ### Provider Quota
@@ -115,8 +115,8 @@ redis-cli keys "agent:*:heartbeat"
 
 ## Monitoring
 
-Supervisor logs: `/home/hung/ai-agents/logs/supervisor.log`
-Agent logs: `/home/hung/ai-agents/logs/agents/`
+Supervisor logs: `~/.hekate/logs/supervisor.log`
+Agent logs: `~/.hekate/logs/agents/`
 
 ### Metrics (Prometheus format)
 ```

@@ -23,8 +23,8 @@ def test_full_workflow_simple_task():
     except redis.ConnectionError:
         pytest.skip("Redis not available")
 
-    # Load config
-    config_path = "/home/hung/ai-agents/supervisor/config.yaml"
+    # Load config from package location
+    config_path = Path(__file__).parent.parent / "hekate" / "config.yaml"
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
