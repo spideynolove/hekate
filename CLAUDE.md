@@ -39,12 +39,12 @@ cd supervisor && pytest tests/test_integration.py -v -m integration
 cd supervisor && python supervisor.py
 
 # Health check
-/home/hung/ai-agents/scripts/health-check.sh
+hekate --health-check  # or ~/.local/bin/hekate-health-check
 
 ## Environment Setup
 
 Requires Python 3.11+, Redis 7+, Beads CLI, MCPorter, and Superpowers plugin.
 
-Virtual environment setup: Python venv at `/home/hung/ai-agents/venv`
+Virtual environment setup: Use UV with `uv venv` and `uv pip install -e .`
 
 API keys configured via `~/.bashrc` functions (deepseek, glm, opr) and supervisor/.env

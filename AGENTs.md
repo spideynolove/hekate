@@ -112,7 +112,7 @@ def claim_task(task_id):
 
 ## Worktree Naming Convention
 
-Worktrees are created with structured paths: `/home/hung/ai-agents/worktrees/{task_id}-{provider}-{timestamp}/`
+Worktrees are created with structured paths: `~/.hekate/worktrees/{task_id}-{provider}-{timestamp}/`
 
 Example:
 - `bd-123-claude-1734539200/`

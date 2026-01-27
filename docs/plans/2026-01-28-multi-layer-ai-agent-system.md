@@ -13,22 +13,22 @@
 ## Task 1: Project Scaffolding
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/supervisor.py`
-- Create: `/home/hung/ai-agents/supervisor/config.yaml`
-- Create: `/home/hung/ai-agents/supervisor/requirements.txt`
-- Create: `/home/hung/ai-agents/supervisor/.env.example`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_config.py`
+- Create: `$HEKATE_INSTALL/supervisor/supervisor.py`
+- Create: `$HEKATE_INSTALL/supervisor/config.yaml`
+- Create: `$HEKATE_INSTALL/supervisor/requirements.txt`
+- Create: `$HEKATE_INSTALL/supervisor/.env.example`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_config.py`
 
 **Step 1: Create directory structure**
 
 Run:
 ```bash
-mkdir -p /home/hung/ai-agents/supervisor
-mkdir -p /home/hung/ai-agents/supervisor/tests
-mkdir -p /home/hung/ai-agents/projects
-mkdir -p /home/hung/ai-agents/logs/agents
-mkdir -p /home/hung/ai-agents/backups/{beads-daily,redis-snapshots}
-cd /home/hung/ai-agents/supervisor
+mkdir -p $HEKATE_INSTALL/supervisor
+mkdir -p $HEKATE_INSTALL/supervisor/tests
+mkdir -p $HEKATE_INSTALL/projects
+mkdir -p $HEKATE_INSTALL/logs/agents
+mkdir -p $HEKATE_INSTALL/backups/{beads-daily,redis-snapshots}
+cd $HEKATE_INSTALL/supervisor
 ```
 
 **Step 2: Write test for config loading**
@@ -145,8 +145,8 @@ ALERT_WEBHOOK=https://hooks.slack.com/services/...
 
 Run:
 ```bash
-python3 -m venv /home/hung/ai-agents/venv
-source /home/hung/ai-agents/venv/bin/activate
+python3 -m venv $HEKATE_INSTALL/venv
+source $HEKATE_INSTALL/venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -166,8 +166,8 @@ git commit -m "feat: initialize project scaffold with config and tests"
 ## Task 2: Quota Tracking Module
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/quota.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_quota.py`
+- Create: `$HEKATE_INSTALL/supervisor/quota.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_quota.py`
 
 **Step 1: Write test for quota initialization**
 
@@ -326,8 +326,8 @@ git commit -m "feat: add quota tracking with time window management"
 ## Task 3: Provider Routing Module
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/router.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_router.py`
+- Create: `$HEKATE_INSTALL/supervisor/router.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_router.py`
 
 **Step 1: Write test for provider selection**
 
@@ -538,8 +538,8 @@ git commit -m "feat: add provider routing with quota-aware selection and cascade
 ## Task 4: Agent Process Manager
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/agent.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_agent.py`
+- Create: `$HEKATE_INSTALL/supervisor/agent.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_agent.py`
 
 **Step 1: Write test for agent spawning**
 
@@ -551,7 +551,7 @@ from agent import AgentManager
 import subprocess
 
 def test_agent_manager_spawns_claude_agent():
-    manager = AgentManager(home_dir="/home/hung")
+    manager = AgentManager(home_dir=str(Path.home()))
 
     with patch('subprocess.Popen') as mock_popen:
         mock_process = Mock()
@@ -561,7 +561,7 @@ def test_agent_manager_spawns_claude_agent():
         agent_id = manager.spawn_agent(
             provider="claude",
             task_id="bd-abc123",
-            project_dir="/home/hung/ai-agents/projects/test-project"
+            project_dir="$HEKATE_INSTALL/projects/test-project"
         )
 
         assert agent_id.startswith("agent-claude-")
@@ -571,7 +571,7 @@ def test_agent_manager_spawns_claude_agent():
         assert call_args[0][0][0] == "claude"
 
 def test_agent_manager_spawns_deepseek_with_env_override():
-    manager = AgentManager(home_dir="/home/hung")
+    manager = AgentManager(home_dir=str(Path.home()))
 
     with patch('subprocess.Popen') as mock_popen:
         mock_process = Mock()
@@ -581,7 +581,7 @@ def test_agent_manager_spawns_deepseek_with_env_override():
         agent_id = manager.spawn_agent(
             provider="deepseek",
             task_id="bd-def456",
-            project_dir="/home/hung/ai-agents/projects/test-project"
+            project_dir="$HEKATE_INSTALL/projects/test-project"
         )
 
         call_args = mock_popen.call_args
@@ -679,14 +679,14 @@ def redis_client():
     client.flushdb()
 
 def test_agent_registers_heartbeat(redis_client):
-    manager = AgentManager(home_dir="/home/hung", redis_client=redis_client)
+    manager = AgentManager(home_dir=str(Path.home()), redis_client=redis_client)
 
     with patch('subprocess.Popen') as mock_popen:
         mock_process = Mock()
         mock_process.pid = 12345
         mock_popen.return_value = mock_process
 
-        agent_id = manager.spawn_agent("claude", "bd-test", "/home/hung/test")
+        agent_id = manager.spawn_agent("claude", "bd-test", "~/test-project")
 
         heartbeat_key = f"agent:{agent_id}:heartbeat"
         assert redis_client.exists(heartbeat_key)
@@ -753,8 +753,8 @@ git commit -m "feat: add agent process manager with heartbeat tracking"
 ## Task 5: Beads Integration Module
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/beads.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_beads.py`
+- Create: `$HEKATE_INSTALL/supervisor/beads.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_beads.py`
 
 **Step 1: Write test for Beads task listing**
 
@@ -934,8 +934,8 @@ git commit -m "feat: add Beads integration for task management"
 ## Task 6: Supervisor Main Loop
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/supervisor.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_supervisor.py`
+- Create: `$HEKATE_INSTALL/supervisor/supervisor.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_supervisor.py`
 
 **Step 1: Write test for supervisor initialization**
 
@@ -1021,7 +1021,7 @@ class Supervisor:
 
         self.quotas = self._initialize_quotas()
         self.router = ProviderRouter(self.quotas, config["quota_thresholds"])
-        self.agent_manager = AgentManager(home_dir="/home/hung", redis_client=self.redis)
+        self.agent_manager = AgentManager(home_dir=str(Path.home()), redis_client=self.redis)
         self.beads = BeadsClient()
 
         self.agent_pools = {}
@@ -1079,7 +1079,7 @@ class Supervisor:
         agent_id = self.agent_manager.spawn_agent(
             provider=provider,
             task_id=task["id"],
-            project_dir=f"/home/hung/ai-agents/projects/{task.get('epic_id', 'default')}"
+            project_dir=f"$HEKATE_INSTALL/projects/{task.get('epic_id', 'default')}"
         )
 
         self.agent_pools[provider]["active"].append(agent_id)
@@ -1193,8 +1193,8 @@ git commit -m "feat: add supervisor main loop with task assignment"
 ## Task 7: Verification Workflow
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/verifier.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_verifier.py`
+- Create: `$HEKATE_INSTALL/supervisor/verifier.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_verifier.py`
 
 **Step 1: Write test for verification agent**
 
@@ -1363,8 +1363,8 @@ git commit -m "feat: add verification agent with staged review"
 ## Task 8: MCPorter Integration
 
 **Files:**
-- Create: `/home/hung/ai-agents/supervisor/mcporter_helper.py`
-- Create: `/home/hung/ai-agents/supervisor/tests/test_mcporter.py`
+- Create: `$HEKATE_INSTALL/supervisor/mcporter_helper.py`
+- Create: `$HEKATE_INSTALL/supervisor/tests/test_mcporter.py`
 - Modify: `~/.mcporter/mcporter.json`
 
 **Step 1: Write test for MCPorter invocation**
@@ -1466,8 +1466,8 @@ If not configured, create: `~/.mcporter/mcporter.json`
 {
   "mcpServers": {
     "sequential-thinking": {
-      "command": "/home/hung/env/.venv/bin/python",
-      "args": ["/home/hung/MCPs/sequential-thinking-mcp-v2/main.py"],
+      "command": "$PYTHON_VENV/bin/python",
+      "args": ["/path/to/mcp-server/main.py"],
       "lifecycle": "keep-alive"
     },
     "repomix": {
@@ -1510,7 +1510,7 @@ git commit -m "feat: add MCPorter integration for token optimization"
 
 **Files:**
 - Create: `/etc/systemd/system/ai-agent-supervisor.service`
-- Create: `/home/hung/ai-agents/scripts/health-check.sh`
+- Create: `$HEKATE_INSTALL/scripts/health-check.sh`
 
 **Step 1: Create systemd service file**
 
@@ -1525,18 +1525,18 @@ Requires=redis.service
 Type=simple
 User=hung
 Group=hung
-WorkingDirectory=/home/hung/ai-agents/supervisor
+WorkingDirectory=$HEKATE_INSTALL/supervisor
 
 Environment="PYTHONUNBUFFERED=1"
-EnvironmentFile=/home/hung/ai-agents/supervisor/.env
+EnvironmentFile=$HEKATE_INSTALL/supervisor/.env
 
-ExecStart=/home/hung/ai-agents/venv/bin/python supervisor.py
+ExecStart=$HEKATE_INSTALL/venv/bin/python supervisor.py
 
 Restart=always
 RestartSec=10
 
-StandardOutput=append:/home/hung/ai-agents/logs/supervisor.log
-StandardError=append:/home/hung/ai-agents/logs/supervisor.log
+StandardOutput=append:$HEKATE_INSTALL/logs/supervisor.log
+StandardError=append:$HEKATE_INSTALL/logs/supervisor.log
 
 [Install]
 WantedBy=multi-user.target
@@ -1546,14 +1546,14 @@ WantedBy=multi-user.target
 
 Run:
 ```bash
-cp /home/hung/ai-agents/supervisor/.env.example /home/hung/ai-agents/supervisor/.env
+cp $HEKATE_INSTALL/supervisor/.env.example $HEKATE_INSTALL/supervisor/.env
 ```
 
 Edit `.env` and add your actual API keys
 
 **Step 3: Create health check script**
 
-Create: `/home/hung/ai-agents/scripts/health-check.sh`
+Create: `$HEKATE_INSTALL/scripts/health-check.sh`
 ```bash
 #!/bin/bash
 
@@ -1610,7 +1610,7 @@ echo "=== Health check complete ==="
 
 Run:
 ```bash
-chmod +x /home/hung/ai-agents/scripts/health-check.sh
+chmod +x $HEKATE_INSTALL/scripts/health-check.sh
 ```
 
 **Step 5: Enable and start service**
@@ -1635,7 +1635,7 @@ Expected: "active (running)"
 
 Run:
 ```bash
-/home/hung/ai-agents/scripts/health-check.sh
+$HEKATE_INSTALL/scripts/health-check.sh
 ```
 
 Expected: All checks pass
@@ -1653,13 +1653,13 @@ git commit -m "feat: add systemd service and health monitoring"
 ## Task 10: Documentation & Usage Guide
 
 **Files:**
-- Create: `/home/hung/ai-agents/README.md`
-- Create: `/home/hung/ai-agents/docs/USAGE.md`
-- Create: `/home/hung/ai-agents/docs/ARCHITECTURE.md`
+- Create: `$HEKATE_INSTALL/README.md`
+- Create: `$HEKATE_INSTALL/docs/USAGE.md`
+- Create: `$HEKATE_INSTALL/docs/ARCHITECTURE.md`
 
 **Step 1: Create README**
 
-Create: `/home/hung/ai-agents/README.md`
+Create: `$HEKATE_INSTALL/README.md`
 ```markdown
 # Multi-Layer AI Agent System
 
@@ -1668,7 +1668,7 @@ Autonomous development system with Beads orchestration, provider routing, and qu
 ## Quick Start
 
 ```bash
-cd /home/hung/ai-agents/supervisor
+cd $HEKATE_INSTALL/supervisor
 source ../venv/bin/activate
 python supervisor.py
 ```
@@ -1677,7 +1677,7 @@ python supervisor.py
 
 ```bash
 systemctl status ai-agent-supervisor
-/home/hung/ai-agents/scripts/health-check.sh
+$HEKATE_INSTALL/scripts/health-check.sh
 ```
 
 ## Provider Quota
@@ -1701,14 +1701,14 @@ redis-cli keys "agent:*:heartbeat"
 
 **Step 2: Create usage guide**
 
-Create: `/home/hung/ai-agents/docs/USAGE.md`
+Create: `$HEKATE_INSTALL/docs/USAGE.md`
 ```markdown
 # Usage Guide
 
 ## Creating an Epic
 
 ```bash
-cd /home/hung/ai-agents/projects/my-project
+cd $HEKATE_INSTALL/projects/my-project
 bd init
 bd create "OAuth 2.0 System" --type epic --priority 0
 ```
@@ -1724,8 +1724,8 @@ bd create "OAuth 2.0 System" --type epic --priority 0
 
 ## Monitoring
 
-Supervisor logs: `/home/hung/ai-agents/logs/supervisor.log`
-Agent logs: `/home/hung/ai-agents/logs/agents/`
+Supervisor logs: `$HEKATE_INSTALL/logs/supervisor.log`
+Agent logs: `$HEKATE_INSTALL/logs/agents/`
 
 ## Manual Intervention
 
@@ -1742,7 +1742,7 @@ redis-cli del quota:claude:count quota:claude:window_start
 
 **Step 3: Create architecture doc**
 
-Create: `/home/hung/ai-agents/docs/ARCHITECTURE.md`
+Create: `$HEKATE_INSTALL/docs/ARCHITECTURE.md`
 ```markdown
 # Architecture
 

@@ -4,7 +4,7 @@
 
 1. **Initialize Beads project:**
    ```bash
-   cd /home/hung/ai-agents/projects/my-project
+   cd ~/hekate-projects/my-project
    bd init
    ```
 
@@ -69,7 +69,7 @@ redis-cli ttl "agent:agent-claude-123:heartbeat"
 ```bash
 cd supervisor
 python -c "from supervisor import Supervisor; import yaml; print('Config valid')"
-tail -f /home/hung/ai-agents/logs/supervisor.log
+tail -f ~/.hekate/logs/supervisor.log
 ```
 
 ### Agents Failing

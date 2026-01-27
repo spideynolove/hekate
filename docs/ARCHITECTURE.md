@@ -145,24 +145,20 @@ The Multi-Layer AI Agent System orchestrates 14 specialized AI agents across 4 p
 
 ### Directory Structure
 ```
-/home/hung/ai-agents/
-├── supervisor/                 # Core system
-│   ├── supervisor.py          # Main orchestrator
-│   ├── config.yaml            # Provider/quota config
-│   ├── agent.py              # Process management
-│   ├── quota.py              # Usage tracking
-│   ├── router.py             # Provider selection
-│   ├── beads.py              # Task integration
-│   ├── verifier.py           # Quality gates
-│   └── tests/                # Unit tests
-├── projects/                  # Workspaces
-├── logs/                      # Monitoring
+~/.hekate/                    # User data directory
+├── config.yaml               # Provider/quota config
+├── projects/                 # Workspaces
+├── logs/                     # Monitoring
 │   ├── supervisor.log
 │   └── agents/
-├── scripts/                   # Management
-│   └── health-check.sh
-├── backuos/                   # Data safety
-└── venv/                      # Isolated environment
+├── worktrees/                # Isolated Git worktrees
+└── backups/                  # Data safety
+
+~/.local/share/hekate/        # Optional system data
+└── ...
+
+/opt/hekate/                  # System installation (optional)
+└── ...
 ```
 
 ### Production Deployment
