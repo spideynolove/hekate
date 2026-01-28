@@ -1,380 +1,306 @@
-#!/usr/bin/env bash
-# Hekate Prerequisites Setup Script
-# Automates installation of Beads, Superpowers, and MCPorter
+#!/bin/bash
+set -euo pipefail
 
-set -e
-
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-success() { echo -e "${GREEN}✓ $1${NC}"; }
-error() { echo -e "${RED}✗ $1${NC}"; }
-warn() { echo -e "${YELLOW}⚠ $1${NC}"; }
-info() { echo -e "${BLUE}ℹ $1${NC}"; }
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+ask_yes_no() {
+    local prompt="$1"
+    local default="${2:-n}"
+    local yn
+
+    if [[ "$default" == "y" ]]; then
+        prompt="$prompt [Y/n]"
+    else
+        prompt="$prompt [y/N]"
+    fi
+
+    while true; do
+        read -rp "$prompt " yn
+        yn=${yn:-$default}
+        case $yn in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
 }
 
-# Detect OS
 detect_os() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        if [ -f /etc/debian_version ]; then
-            echo "debian"
-        else
-            echo "linux"
-        fi
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
         echo "macos"
+    elif [[ -f /etc/debian_version ]]; then
+        echo "debian"
+    elif [[ -f /etc/redhat-release ]]; then
+        echo "redhat"
     else
-        echo "unknown"
+        echo "linux"
     fi
 }
+
+check_command() {
+    command -v "$1" &>/dev/null
+}
+
+check_docker_running() {
+    check_command docker && docker info &>/dev/null
+}
+
+check_redis_available() {
+    if check_command redis-cli && redis-cli ping &>/dev/null; then
+        return 0
+    fi
+    if check_docker_running && docker ps --format '{{.Names}}' | grep -q '^redis$'; then
+        return 0
+    fi
+    return 1
+}
+
+detect_python_setup() {
+    local has_python=0
+    local has_uv=0
+    local python_path=""
+
+    if check_command python3; then
+        has_python=1
+        python_path=$(command -v python3)
+    fi
+
+    if check_command uv; then
+        has_uv=1
+    fi
+
+    echo "$has_python|$has_uv|$python_path"
+}
+
+detect_node_setup() {
+    local has_node=0
+    local has_npm=0
+    local node_path=""
+    local install_method=""
+
+    if check_command node; then
+        has_node=1
+        node_path=$(command -v node)
+    fi
+
+    if check_command npm; then
+        has_npm=1
+    fi
+
+    if [[ -n "${NVM_DIR:-}" ]] || check_command nvm; then
+        install_method="nvm"
+    elif check_command brew && [[ -d "$(brew --prefix)/opt/node" ]]; then
+        install_method="brew"
+    elif check_command docker; then
+        install_method="docker"
+    fi
+
+    echo "$has_node|$has_npm|$node_path|$install_method"
+}
+
+detect_go_setup() {
+    local has_go=0
+    local go_path=""
+    local install_method=""
+
+    if check_command go; then
+        has_go=1
+        go_path=$(command -v go)
+    fi
+
+    if [[ -d "$HOME/go" ]]; then
+        install_method="local"
+    elif check_command docker; then
+        install_method="docker"
+    fi
+
+    echo "$has_go|$go_path|$install_method"
+}
+
+log_info "Hekate Prerequisites Check"
+log_info "============================"
+echo
 
 OS=$(detect_os)
+log_info "Detected OS: $OS"
+echo
 
-# Install Go if not present
-install_go() {
-    if command_exists go; then
-        success "Go already installed ($(go version))"
-        return
+log_info "Checking existing installations..."
+echo
+
+REDIS_AVAILABLE=0
+if check_redis_available; then
+    REDIS_AVAILABLE=1
+    log_success "Redis: Available (running)"
+    if check_docker_running && docker ps --format '{{.Names}}' | grep -q '^redis$'; then
+        log_info "  └─ Running in Docker"
     fi
-
-    info "Installing Go..."
-    case "$OS" in
-        "macos")
-            if command_exists brew; then
-                brew install go
-            else
-                error "Homebrew not found. Please install from https://brew.sh/"
-                exit 1
-            fi
-            ;;
-        "debian"|"linux")
-            wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz
-            sudo tar -C /usr/local -xzf go1.23.0.linux-amd64.tar.gz
-            echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-            export PATH=$PATH:/usr/local/go/bin
-            ;;
-    esac
-    success "Go installed"
-}
-
-# Install Node.js if not present
-install_nodejs() {
-    if command_exists node && command_exists npm; then
-        success "Node.js already installed ($(node --version))"
-        return
+elif check_command redis-cli; then
+    log_warn "Redis: Installed but not running"
+    if check_docker_running; then
+        log_info "  └─ Docker is available - can run Redis in container"
     fi
+elif check_docker_running; then
+    log_warn "Redis: Not found (but Docker available)"
+else
+    log_warn "Redis: Not found"
+fi
 
-    info "Installing Node.js..."
-    case "$OS" in
-        "macos")
-            if command_exists brew; then
-                brew install node
-            else
-                error "Homebrew not found. Please install from https://brew.sh/"
-                exit 1
-            fi
-            ;;
-        "debian"|"linux")
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            ;;
-    esac
-    success "Node.js installed"
-}
+PYTHON_SETUP=$(detect_python_setup)
+IFS='|' read -r HAS_PYTHON HAS_UV PYTHON_PATH <<< "$PYTHON_SETUP"
+if [[ $HAS_PYTHON -eq 1 ]]; then
+    log_success "Python: Found at $PYTHON_PATH"
+else
+    log_warn "Python: Not found"
+fi
+if [[ $HAS_UV -eq 1 ]]; then
+    log_success "uv: Found ($(uv --version 2>&1 | head -1))"
+else
+    log_warn "uv: Not found"
+fi
 
-# Check and install Beads CLI
-check_beads() {
-    echo ""
-    info "Checking Beads CLI..."
-    if command_exists bd; then
-        success "Beads CLI already installed ($(bd --version))"
-        return 0
+NODE_SETUP=$(detect_node_setup)
+IFS='|' read -r HAS_NODE HAS_NPM NODE_PATH NODE_METHOD <<< "$NODE_SETUP"
+if [[ $HAS_NODE -eq 1 ]]; then
+    log_success "Node.js: Found at $NODE_PATH"
+    if [[ -n "$NODE_METHOD" ]]; then
+        log_info "  └─ Install method: $NODE_METHOD"
     fi
+else
+    log_warn "Node.js: Not found"
+fi
 
-    warn "Beads CLI not found"
+GO_SETUP=$(detect_go_setup)
+IFS='|' read -r HAS_GO GO_PATH GO_METHOD <<< "$GO_SETUP"
+if [[ $HAS_GO -eq 1 ]]; then
+    log_success "Go: Found at $GO_PATH"
+    if [[ -n "$GO_METHOD" ]]; then
+        log_info "  └─ Install method: $GO_METHOD"
+    fi
+else
+    log_warn "Go: Not found"
+fi
 
-    # Offer to install
-    read -p "Install Beads CLI? [Y/n] " -n 1 -r
+if check_command bd; then
+    log_success "Beads CLI: Already installed"
+else
+    log_warn "Beads CLI: Not found"
+fi
+
+if check_command claude && [[ "$(claude plugin list 2>/dev/null)" =~ superpowers ]]; then
+    log_success "Superpowers: Already installed"
+elif check_command claude; then
+    log_warn "Superpowers: Not installed (Claude Code available)"
+else
+    log_warn "Claude Code: Not found (required for Superpowers)"
+fi
+
+if check_command mcporter || npm list -g @mcporter/mcporter &>/dev/null; then
+    log_success "MCPorter: Already installed"
+else
+    log_info "MCPorter: Not found (optional)"
+fi
+
+echo
+log_info "============================"
+echo
+
+if [[ $REDIS_AVAILABLE -eq 0 ]]; then
+    log_warn "Redis is required but not available."
+    if check_docker_running; then
+        if ask_yes_no "Start Redis in Docker container?" "y"; then
+            log_info "Starting Redis in Docker..."
+            docker run -d --name redis -p 6379:6379 redis:alpine
+            log_success "Redis started in Docker"
+            REDIS_AVAILABLE=1
+        fi
+    else
+        log_info "To start Redis manually:"
+        echo "  - macOS: brew services start redis"
+        echo "  - Debian/Ubuntu: sudo systemctl start redis-server"
+        echo "  - Docker: docker run -d --name redis -p 6379:6379 redis:alpine"
+    fi
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        info "Installing Beads CLI..."
+fi
 
-        if command_exists brew; then
-            brew install beads
-        elif command_exists go; then
-            go install github.com/steveyegge/beads/cmd/bd@latest
-            export PATH=$PATH:$(go env GOPATH)/bin
-            echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
-        else
-            error "Neither Homebrew nor Go found. Cannot install Beads."
-            error "Install Homebrew first: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-            return 1
-        fi
-
-        if command_exists bd; then
-            success "Beads CLI installed successfully"
-        else
-            error "Beads CLI installation failed"
-            return 1
-        fi
-    else
-        warn "Skipping Beads CLI installation"
+if [[ $HAS_GO -eq 0 ]] && ! check_command bd; then
+    log_warn "Beads CLI requires Go."
+    if check_docker_running && ask_yes_no "Use Docker for Go tools instead?" "n"; then
+        log_info "You can run Beads CLI in Docker:"
+        echo "  docker run --rm -v \${PWD}:/app -w /app golang:latest go install github.com/steveyegge/beads/cmd/bd@latest"
+        log_warn "Note: Go tools in Docker will need \$GOPATH mounted for persistence."
+    elif ask_yes_no "Install Go now?" "n"; then
+        log_info "Install Go from https://go.dev/dl/ or:"
+        case $OS in
+            macos)
+                echo "  brew install go"
+                ;;
+            debian)
+                echo "  sudo apt install golang-go"
+                ;;
+            *)
+                echo "  Visit https://go.dev/dl/"
+                ;;
+        esac
+        log_warn "After installing Go, run: go install github.com/steveyegge/beads/cmd/bd@latest"
     fi
-    return 0
-}
-
-# Check and install Superpowers
-check_superpowers() {
-    echo ""
-    info "Checking Superpowers plugin..."
-
-    # Check if marketplace is registered
-    if command_exists claude && claude plugin list 2>/dev/null | grep -q marketplace; then
-        if command_exists claude && claude /help 2>/dev/null | grep -q superpowers; then
-            success "Superpowers plugin already installed"
-            return 0
-        fi
-    fi
-
-    warn "Superpowers plugin not found"
-
-    # Offer to install
-    read -p "Install Superpowers plugin? [Y/n] " -n 1 -r
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        info "Installing Superpowers plugin..."
+fi
 
-        # Check if marketplace is registered
-        if ! command_exists claude || ! claude plugin list 2>/dev/null | grep -q marketplace; then
-            info "Registering Superpowers marketplace..."
-            claude /plugin marketplace add obra/superpowers-marketplace || {
-                error "Failed to register marketplace"
-                return 1
-            }
-        fi
-
-        # Install from marketplace
-        claude /plugin install superpowers@superpowers-marketplace || {
-            error "Failed to install Superpowers"
-            return 1
-        }
-
-        if claude /help 2>/dev/null | grep -q superpowers; then
-            success "Superpowers plugin installed successfully"
-        else
-            warn "Superpowers installed but not yet showing in /help"
-        fi
-    else
-        warn "Skipping Superpowers installation"
+if [[ $HAS_GO -eq 1 ]] && ! check_command bd; then
+    if ask_yes_no "Install Beads CLI via go install?" "y"; then
+        log_info "Installing Beads CLI..."
+        go install github.com/steveyegge/beads/cmd/bd@latest
+        log_success "Beads CLI installed to $(go env GOPATH)/bin/bd"
+        log_warn "Ensure \$(go env GOPATH)/bin is in your PATH"
     fi
-    return 0
-}
-
-# Check and install MCPorter
-check_mcporter() {
-    echo ""
-    info "Checking MCPorter..."
-
-    if command_exists mcporter; then
-        success "MCPorter already installed ($(mcporter --version))"
-        return 0
-    fi
-
-    warn "MCPorter not found (optional but recommended)"
-
-    # Offer to install
-    read -p "Install MCPorter? [y/N] " -n 1 -r
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        if command_exists npm; then
-            info "Installing MCPorter (optional - for token optimization)..."
-            npm install -g @mcporter/mcporter
+fi
 
-            if command_exists mcporter; then
-                success "MCPorter installed successfully"
-
-                # Offer to initialize
-                read -p "Initialize MCPorter configuration? [y/N] " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    mcporter init
-                    success "MCPorter initialized"
-                else
-                    info "Skipping MCPorter initialization"
-                fi
-            else
-                warn "MCPorter installation may have failed"
-            fi
-        else
-            warn "npm not found. Skipping MCPorter installation."
-        fi
-    else
-        info "Skipping MCPorter installation"
-    fi
-    return 0
-}
-
-# Check Redis
-check_redis() {
-    echo ""
-    info "Checking Redis..."
-
-    if command_exists redis-cli && redis-cli ping >/dev/null 2>&1; then
-        success "Redis is running"
-        return 0
-    elif command_exists redis-cli; then
-        warn "Redis installed but not running"
-        read -p "Start Redis? [y/N] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            if command_exists systemctl; then
-                sudo systemctl start redis-server || sudo systemctl start redis
-            else
-                redis-server --daemonize yes
-            fi
-            if redis-cli ping >/dev/null 2>&1; then
-                success "Redis started"
-            else
-                warn "Redis failed to start"
-            fi
-        fi
-    else
-        warn "Redis not found"
-        read -p "Install Redis? [Y/n] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            case "$OS" in
-                "macos")
-                    brew install redis
-                    brew services start redis
-                    ;;
-                "debian"|"linux")
-                    sudo apt update
-                    sudo apt install -y redis-server
-                    sudo systemctl start redis
-                    ;;
-            esac
-            if command_exists redis-cli && redis-cli ping >/dev/null 2>&1; then
-                success "Redis installed and started"
-            else
-                warn "Redis installation may have failed"
-            fi
-        fi
-    fi
-    return 0
-}
-
-# Check Python and uv
-check_python() {
-    echo ""
-    info "Checking Python environment..."
-
-    if command_exists python3 || command_exists python; then
-        success "Python found"
-    else
-        error "Python not found"
-        return 1
-    fi
-
-    if command_exists uv; then
-        success "uv package manager found"
-    else
-        warn "uv not found (recommended for Python dependency management)"
-        read -p "Install uv? [Y/n] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            info "Installing uv..."
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-            success "uv installed"
-        fi
-    fi
-    return 0
-}
-
-# Copy Hekate config
-check_config() {
-    echo ""
-    info "Checking Hekate configuration..."
-
-    CONFIG_DIR="$HOME/.hekate"
-    CONFIG_FILE="$CONFIG_DIR/config.yaml"
-
-    if [ -f "$CONFIG_FILE" ]; then
-        success "Hekate config exists at $CONFIG_FILE"
-        return 0
-    fi
-
-    warn "Hekate config not found"
-    read -p "Create Hekate config directory and copy default config? [Y/n] " -n 1 -r
+if ! check_command claude; then
+    log_warn "Claude Code not found. Required for Superpowers."
+    log_info "Install from: https://claude.ai/code"
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        mkdir -p "$CONFIG_DIR"
+fi
 
-        # Find the config file in the package
-        if [ -f "src/hekate/config.yaml" ]; then
-            cp src/hekate/config.yaml "$CONFIG_FILE/"
-            success "Config copied to $CONFIG_FILE"
-            info "Edit $CONFIG_FILE with your API keys before running Hekate"
-        else
-            error "Default config not found at src/hekate/config.yaml"
-            return 1
-        fi
+if check_command claude && ! [[ "$(claude plugin list 2>/dev/null)" =~ superpowers ]]; then
+    if ask_yes_no "Install Superpowers plugin?" "y"; then
+        log_info "Installing Superpowers..."
+        claude plugin add superpowers
+        log_success "Superpowers installed"
     fi
-    return 0
-}
+    echo
+fi
 
-# Main installation flow
-main() {
-    clear
-    echo -e "${BLUE}╔════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║     Hekate Prerequisites Setup                      ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo "This script will check for and optionally install:"
-    echo "  • Beads CLI (required)"
-    echo "  • Superpowers plugin (required)"
-    echo "  • MCPorter (optional, recommended)"
-    echo "  • Redis (required)"
-    echo "  • Python + uv (required)"
-    echo ""
-    echo "OS detected: $OS"
-    echo ""
+if ! check_command mcporter && [[ $HAS_NODE -eq 1 ]]; then
+    if ask_yes_no "Install MCPorter? (Optional - reduces token usage by ~43%)" "n"; then
+        log_info "Installing MCPorter..."
+        npm install -g @mcporter/mcporter
+        log_success "MCPorter installed"
+    fi
+    echo
+fi
 
-    # Check/install prerequisites
-    check_python
-    check_redis
-    check_beads
-    check_superpowers
-    check_mcporter
-    check_config
+echo
+log_info "============================"
+log_info "Setup complete!"
+echo
 
-    echo ""
-    echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║               Setup Complete!                    ║${NC}"
-    echo -e "${GREEN}╚════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Edit ~/.hekate/config.yaml with your API keys"
-    echo "  2. Source ~/.bashrc to reload provider functions"
-    echo "  3. Run: hekate"
-    echo ""
-
-    # Show status summary
-    echo -e "${BLUE}Status Summary:${NC}"
-    echo "  Beads CLI: $(command_exists bd && echo "✓ Installed" || echo "✗ Not installed")"
-    echo "  Superpowers: $(claude /plugin list 2>/dev/null | grep -q superpowers && echo "✓ Installed" || echo "✗ Not installed")"
-    echo "  MCPorter: $(command_exists mcporter && echo "✓ Installed" || echo "✗ Not installed")"
-    echo "  Redis: $(redis-cli ping >/dev/null 2>&1 && echo "✓ Running" || command_exists redis-cli && echo "⚠ Installed but not running" || echo "✗ Not installed")"
-    echo "  Python: $(command_exists python3 || command_exists python && echo "✓ Found" || echo "✗ Not found")"
-}
-
-# Run main
-main "$@"
+log_info "Next steps:"
+echo "  1. Ensure all required tools are in your PATH"
+echo "  2. Configure provider functions in ~/.bashrc:"
+echo "     export ANTHROPIC_AUTH_TOKEN='your-api-key'"
+echo "  3. Copy and edit Hekate config:"
+echo "     mkdir -p ~/.hekate"
+echo "     cp src/hekate/config.yaml ~/.hekate/"
+echo "     nano ~/.hekate/config.yaml"
+echo
