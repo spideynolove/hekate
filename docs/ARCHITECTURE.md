@@ -6,15 +6,22 @@ The Multi-Layer AI Agent System orchestrates 14 specialized AI agents across 4 p
 
 ## Prerequisites
 
-Hekate requires the following external tools to be installed separately:
+Hekate requires external tools to be installed separately.
 
-| Tool | Purpose | Installation | Required |
-|------|---------|--------------|----------|
-| **Beads CLI** | Task orchestration | `brew install beads` or `go install github.com/steveyegge/beads/cmd/bd@latest` | Yes |
-| **Superpowers** | TDD enforcement, quality gates | `claude plugin add superpowers` | Yes |
-| **MCPorter** | Token optimization (43% reduction) | `npm install -g @mcporter/mcporter` | Optional |
+**Automated setup (recommended):**
+```bash
+./scripts/setup-prerequisites.sh
+```
 
-See [CLAUDE.md](../CLAUDE.md) for detailed installation instructions.
+| Tool | Purpose | Required |
+|------|---------|----------|
+| **Beads CLI** | Task orchestration | Yes |
+| **Superpowers** | TDD enforcement, quality gates | Yes |
+| **MCPorter** | Token optimization (43% reduction) | Optional |
+| **Redis** | State management | Yes |
+| **Python + uv** | Runtime and dependencies | Yes |
+
+See [CLAUDE.md](../CLAUDE.md) for detailed manual installation instructions.
 
 ## Core Components
 

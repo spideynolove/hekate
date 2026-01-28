@@ -2,13 +2,21 @@
 
 ## Prerequisites
 
-Before using Hekate, ensure you have installed:
+Before using Hekate, install required external tools:
 
-- **Beads CLI**: `brew install beads` or `go install github.com/steveyegge/beads/cmd/bd@latest`
-- **Superpowers**: `claude plugin add superpowers` (for TDD enforcement)
-- **MCPorter** (optional): `npm install -g @mcporter/mcporter` (for token optimization)
+**Automated setup (recommended):**
+```bash
+./scripts/setup-prerequisites.sh
+```
 
-See [CLAUDE.md](../CLAUDE.md) for detailed setup instructions.
+This interactive script installs:
+- Beads CLI (task orchestration)
+- Superpowers plugin (TDD enforcement)
+- MCPorter (token optimization, optional)
+- Redis (state management)
+- Python + uv (dependency management)
+
+For detailed manual setup, see [CLAUDE.md](../CLAUDE.md).
 
 ## Creating an Epic
 

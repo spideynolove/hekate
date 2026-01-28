@@ -47,60 +47,30 @@ Requires Python 3.10+, Redis 7+, and external tools (Beads CLI, Superpowers, MCP
 
 ### Prerequisites Installation
 
-Hekate requires three external tools to be installed separately:
+Hekate requires external tools (Beads CLI, Superpowers, MCPorter, Redis, Python).
+
+**Automated setup (recommended):**
+```bash
+./scripts/setup-prerequisites.sh
+```
+
+This interactive script detects your OS and installs all prerequisites with prompts.
+
+**Manual setup:**
+See individual tool documentation below for manual installation.
 
 #### 1. Beads CLI
 Task management system for AI agents. Required for epic/task orchestration.
-
-```bash
-# Option A: Install via Homebrew (macOS/Linux)
-brew install beads
-
-# Option B: Install via Go
-go install github.com/steveyegge/beads/cmd/bd@latest
-
-# Option C: From source
-git clone https://github.com/steveyegge/beads.git
-cd beads && cargo install --path cli
-
-# Verify installation
-bd --version
-```
 
 [Documentation](https://github.com/steveyegge/beads)
 
 #### 2. Superpowers Plugin
 Claude Code plugin for autonomous development enforcement (TDD, quality gates).
 
-```bash
-# Install via Claude Code plugin marketplace
-claude plugin add superpowers
-
-# Or install from GitHub
-claude plugin install https://github.com/anthropics/claude-code-plugins
-
-# Verify installation
-claude plugin list | grep superpowers
-```
-
 [Documentation](https://github.com/anthropics/claude-code/blob/main/plugins/README.md)
 
 #### 3. MCPorter (Optional)
 Token optimization for on-demand MCP tool invocation. Reduces token usage by ~43%.
-
-```bash
-# Install via npm
-npm install -g @mcporter/mcporter
-
-# Or install locally
-npm install @mcporter/mcporter
-
-# Initialize configuration
-mcporter init
-
-# Verify installation
-mcporter --version
-```
 
 [Documentation](https://github.com/steipete/mcporter)
 
