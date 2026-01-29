@@ -1,11 +1,5 @@
 __version__ = "1.0.0"
 
-def Supervisor(*args, **kwargs):
-    from .supervisor import Supervisor as _Supervisor
-    return _Supervisor(*args, **kwargs)
+from .beads import BeadsClient
 
-def main():
-    from .supervisor import main as _main
-    _main()
-
-__all__ = ["Supervisor", "main"]
+__all__ = ["BeadsClient"]

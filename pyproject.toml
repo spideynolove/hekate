@@ -46,8 +46,8 @@ docs = [
     "myst-parser",
 ]
 
-[project.scripts]
-hekate = "hekate.main:cli"
+# No CLI entry point - Hekate now uses Claude Code hooks
+# Use scripts/init-redis.sh and scripts/install-hooks.sh to set up
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hekate"]
