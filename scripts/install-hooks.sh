@@ -146,6 +146,12 @@ hekate_hooks = {
                     "command": f"python3 {claude_hooks_dir}/posttooluse_verify_prefetch.py",
                     "async": True,
                     "timeout": 10
+                },
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/posttooluse_metrics.py",
+                    "async": True,
+                    "timeout": 3
                 }
             ]
         },
