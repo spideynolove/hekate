@@ -85,11 +85,18 @@ hekate_hooks = {
         }],
         "PreToolUse": [{
             "matcher": ".*",
-            "hooks": [{
-                "type": "command",
-                "command": f"python3 {claude_hooks_dir}/pretooluse_router.py",
-                "timeout": 2
-            }]
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/pretooluse_router.py",
+                    "timeout": 2
+                },
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/pretooluse_memory.py",
+                    "timeout": 3
+                }
+            ]
         }],
         "PostToolUse": [{
             "matcher": "Bash",
@@ -111,6 +118,12 @@ hekate_hooks = {
                     "command": f"python3 {claude_hooks_dir}/posttooluse_track_outcome.py",
                     "async": True,
                     "timeout": 5
+                },
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/posttooluse_memory.py",
+                    "async": True,
+                    "timeout": 3
                 }
             ]
         },
