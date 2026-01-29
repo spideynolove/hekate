@@ -95,6 +95,11 @@ hekate_hooks = {
                     "type": "command",
                     "command": f"python3 {claude_hooks_dir}/pretooluse_memory.py",
                     "timeout": 3
+                },
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/pretooluse_verify_inject.py",
+                    "timeout": 3
                 }
             ]
         }],
@@ -128,7 +133,24 @@ hekate_hooks = {
             ]
         },
         {
-            "matcher": "Write|Edit|Read|Grep|Glob",
+            "matcher": "Write|Edit",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/posttooluse_track_outcome.py",
+                    "async": True,
+                    "timeout": 5
+                },
+                {
+                    "type": "command",
+                    "command": f"python3 {claude_hooks_dir}/posttooluse_verify_prefetch.py",
+                    "async": True,
+                    "timeout": 10
+                }
+            ]
+        },
+        {
+            "matcher": "Read|Grep|Glob",
             "hooks": [{
                 "type": "command",
                 "command": f"python3 {claude_hooks_dir}/posttooluse_track_outcome.py",
