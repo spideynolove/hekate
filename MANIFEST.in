@@ -1,8 +1,0 @@
-include src/hekate/config.yaml
-include src/hekate/.env.example
-include src/hekate/requirements.txt
-include README.md
-include LICENSE
-include docs/*.md
-include scripts/*
-include systemd/*
