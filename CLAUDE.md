@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Hekate is a **hooks-based autonomous multi-agent system** that runs entirely within Claude Code. It orchestrates AI coding agents across multiple LLM providers (Claude, GLM, DeepSeek, OpenRouter) with intelligent routing, semantic memory, and verification cascades.
+Hekate is a **Claude Code plugin** providing hooks-based autonomous multi-agent coordination across multiple LLM providers (Claude, GLM, DeepSeek, OpenRouter) with intelligent routing, semantic memory, and verification cascades.
 
-## Architecture (Hooks-Based)
+## Architecture
 
-**No supervisor daemon** - Claude Code hooks coordinate everything via Redis.
+**No supervisor daemon** - All coordination via Claude Code hooks + Redis.
 
 ### Key Components
 
@@ -33,67 +33,42 @@ Hekate is a **hooks-based autonomous multi-agent system** that runs entirely wit
 | `posttooluse_verify_prefetch.py` | Start verification |
 | `posttooluse_metrics.py` | Collect metrics |
 
-## Development Commands
+## Installation
 
-# Initialize Redis with quota limits
-./scripts/init-redis.sh
+This is a Claude Code plugin. See [docs/INSTALL.md](docs/INSTALL.md) for setup.
 
-# Install Claude Code hooks
-./scripts/install-hooks.sh
-
-# Real-time dashboard
-./scripts/hekate-dashboard.py
-
-# Pattern analysis
-./scripts/hekate-analyze.py
-
-# Prometheus metrics export
-./scripts/hekate-dashboard.py --prometheus
-
-## Environment Setup
-
-Requires Python 3.10+, Redis 7+, and external tools (Beads CLI, Superpowers, MCPorter).
-
-### Prerequisites Installation
-
-**Automated setup (recommended):**
 ```bash
+# Development installation
+ln -s /path/to/hekate ~/.claude/plugins/hekate
+claude plugin enable hekate
+
+# Prerequisites and initialization
+cd ~/.claude/plugins/hekate
 ./scripts/setup-prerequisites.sh
-```
-
-**Manual setup:**
-- **Beads CLI**: `brew install beads` or `go install github.com/steveyegge/beads/cmd/bd@latest`
-- **Superpowers**: `claude plugin add superpowers`
-- **MCPorter**: `npm install -g @mcporter/mcporter` (optional)
-- **Redis**: `brew install redis` or `docker run -d --name redis -p 6379:6379 redis:alpine`
-
-## Installation & Setup
-
-```bash
-# Clone repository
-git clone https://github.com/spideynolove/hekate.git
-cd hekate
-
-# Initialize Redis
 ./scripts/init-redis.sh
-
-# Install hooks
-./scripts/install-hooks.sh
-
-# Restart Claude Code to load hooks
 ```
 
-### API Keys Configuration
+### API Keys
 
 Set in `~/.bashrc`:
 
 ```bash
-# Required for epic decomposition
 export OPENROUTER_API_KEY="sk-or-..."
-
-# Required for providers
 export Z_AI_API_KEY="..."
 export DEEPSEEK_API_KEY="sk-..."
+```
+
+## Monitoring Commands
+
+```bash
+# Real-time dashboard
+${CLAUDE_PLUGIN_ROOT}/scripts/hekate-dashboard.py
+
+# Pattern analysis
+${CLAUDE_PLUGIN_ROOT}/scripts/hekate-analyze.py
+
+# Prometheus export
+${CLAUDE_PLUGIN_ROOT}/scripts/hekate-dashboard.py --prometheus
 ```
 
 ## Provider Routing
@@ -200,16 +175,42 @@ os.environ['ANTHROPIC_AUTH_TOKEN'] = os.environ['Z_AI_API_KEY']
 
 ```
 hekate/
-├── hooks/                           # Claude Code hooks (11 files)
-├── scripts/                         # Setup & monitoring (5 files)
-├── src/hekate/
-│   ├── __init__.py                 # BeadsClient export
-│   ├── beads.py                    # Beads client library
-│   └── config.yaml                 # Default configuration
+├── .claude-plugin/
+│   └── plugin.json                 # Plugin manifest
+├── hooks/
+│   ├── hooks.json                  # Hook configuration
+│   ├── PreToolUse/
+│   │   ├── router.py
+│   │   ├── memory.py
+│   │   └── verify_inject.py
+│   ├── PostToolUse/
+│   │   ├── complete_task.py
+│   │   ├── memory.py
+│   │   ├── spawn_agents.py
+│   │   ├── track_outcome.py
+│   │   ├── verify_prefetch.py
+│   │   └── metrics.py
+│   ├── UserPromptSubmit/
+│   │   └── decompose.py
+│   └── SessionStart/
+│       └── init.py
+├── skills/
+│   ├── beads-tools/
+│   ├── redis-cli/
+│   ├── hekate-monitoring/
+│   └── hekate-agent-workflow/
+├── scripts/
+│   ├── setup-prerequisites.sh
+│   ├── init-redis.sh
+│   ├── hekate-dashboard.py
+│   ├── hekate-analyze.py
+│   └── redis-cleanup.sh
 ├── docs/
+│   ├── README.md
+│   ├── INSTALL.md
+│   ├── ARCHITECTURE.md
+│   ├── USAGE.md
 │   └── plans/
-│       ├── 2026-01-29-hooks-based-architecture.md
-│       └── 2026-01-29-phase1-implementation.md
 ├── CLAUDE.md
 └── README.md
 ```

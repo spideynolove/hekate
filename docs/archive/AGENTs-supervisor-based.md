@@ -61,7 +61,7 @@ The supervisor spawns agents via subprocess calls. Each agent gets:
 1. **Isolated git worktree** for task execution
 2. **Provider-specific environment** (env vars + URL overrides)
 3. **Superpowers enforcement** (TDD, quality gates)
-4. **MCPorter integration** (token optimization)
+4. **Hekate skills** (on-demand tool loading)
 
 Example supervisor agent spawning:
 ```python

@@ -1,0 +1,32 @@
+{
+  "name": "hekate",
+  "version": "1.0.0",
+  "description": "Hooks-based autonomous multi-agent system for coordinating AI agents across multiple LLM providers",
+  "author": "spideynolove",
+  "repository": "https://github.com/spideynolove/hekate",
+  "license": "MIT",
+
+  "components": {
+    "hooks": "hooks/hooks.json",
+    "skills": "skills/",
+    "scripts": "scripts/"
+  },
+
+  "dependencies": {
+    "external": [
+      "redis >= 7.0",
+      "python >= 3.10",
+      "beads-cli"
+    ],
+    "python": [
+      "chromadb",
+      "requests"
+    ]
+  },
+
+  "documentation": {
+    "readme": "docs/README.md",
+    "install": "docs/INSTALL.md",
+    "architecture": "docs/ARCHITECTURE.md"
+  }
+}

@@ -17,7 +17,6 @@ Hekate requires external tools to be installed separately.
 |------|---------|----------|
 | **Beads CLI** | Task orchestration | Yes |
 | **Superpowers** | TDD enforcement, quality gates | Yes |
-| **MCPorter** | Token optimization (43% reduction) | Optional |
 | **Redis** | State management | Yes |
 | **Python + uv** | Runtime and dependencies | Yes |
 

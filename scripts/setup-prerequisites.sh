@@ -204,10 +204,11 @@ else
     log_warn "Claude Code: Not found (required for Superpowers)"
 fi
 
-if check_command mcporter || npm list -g @mcporter/mcporter &>/dev/null; then
-    log_success "MCPorter: Already installed"
+SKILLS_COUNT=$(find ~/.claude/skills -name "SKILL.md" 2>/dev/null | wc -l)
+if [[ $SKILLS_COUNT -ge 4 ]]; then
+    log_success "Hekate Skills: Already compiled ($SKILLS_COUNT skills)"
 else
-    log_info "MCPorter: Not found (optional)"
+    log_info "Hekate Skills: Not compiled ($SKILLS_COUNT skills)"
 fi
 
 echo
@@ -281,11 +282,20 @@ if check_command claude && ! [[ "$(claude plugin list 2>/dev/null)" =~ superpowe
     echo
 fi
 
-if ! check_command mcporter && [[ $HAS_NODE -eq 1 ]]; then
-    if ask_yes_no "Install MCPorter? (Optional - reduces token usage by ~43%)" "n"; then
-        log_info "Installing MCPorter..."
-        npm install -g @mcporter/mcporter
-        log_success "MCPorter installed"
+if [[ $HAS_PYTHON -eq 1 ]]; then
+    if ask_yes_no "Install semantic memory dependencies? (ChromaDB only for vector storage)" "y"; then
+        log_info "Installing ChromaDB..."
+        if [[ $HAS_UV -eq 1 ]]; then
+            uv pip install chromadb
+        else
+            pip install chromadb
+        fi
+        log_success "ChromaDB installed"
+
+        log_info "Initializing vector database..."
+        python3 -c "import chromadb; client = chromadb.PersistentClient(path='$HOME/.hekate/memory'); client.get_or_create_collection('sessions')"
+        log_success "Vector database initialized at ~/.hekate/memory"
+        log_info "Note: Embeddings generated via OpenRouter API (requires OPENROUTER_API_KEY)"
     fi
     echo
 fi
@@ -297,10 +307,15 @@ echo
 
 log_info "Next steps:"
 echo "  1. Ensure all required tools are in your PATH"
-echo "  2. Configure provider functions in ~/.bashrc:"
-echo "     export ANTHROPIC_AUTH_TOKEN='your-api-key'"
-echo "  3. Copy and edit Hekate config:"
-echo "     mkdir -p ~/.hekate"
-echo "     cp src/hekate/config.yaml ~/.hekate/"
-echo "     nano ~/.hekate/config.yaml"
+echo "  2. Configure provider API keys in ~/.bashrc:"
+echo "     export OPENROUTER_API_KEY='sk-or-...'"
+echo "     export Z_AI_API_KEY='...'"
+echo "     export DEEPSEEK_API_KEY='sk-...'"
+echo "  3. From hekate directory, initialize Redis:"
+echo "     ./scripts/init-redis.sh"
+echo "  4. Install Claude Code hooks:"
+echo "     ./scripts/install-hooks.sh"
+echo "  5. Compile Hekate skills:"
+echo "     ./scripts/compile-mcp-to-skills.sh"
+echo
 echo

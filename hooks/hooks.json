@@ -1,0 +1,87 @@
+{
+  "description": "Hekate multi-agent coordination hooks",
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "startup|resume",
+      "hooks": [{
+        "type": "command",
+        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/SessionStart/init.py",
+        "timeout": 5
+      }]
+    }],
+
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/UserPromptSubmit/decompose.py",
+        "timeout": 30
+      }]
+    }],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PreToolUse/router.py",
+          "timeout": 2
+        }]
+      },
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PreToolUse/memory.py",
+          "timeout": 3
+        }]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/complete_task.py",
+            "async": false,
+            "timeout": 2
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/spawn_agents.py",
+            "async": true,
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/memory.py",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/track_outcome.py",
+            "async": true,
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/metrics.py",
+            "async": true,
+            "timeout": 2
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/PostToolUse/verify_prefetch.py",
+          "async": true,
+          "timeout": 10
+        }]
+      }
+    ]
+  }
+}

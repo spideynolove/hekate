@@ -12,7 +12,6 @@ Before using Hekate, install required external tools:
 This interactive script installs:
 - Beads CLI (task orchestration)
 - Superpowers plugin (TDD enforcement)
-- MCPorter (token optimization, optional)
 - Redis (state management)
 - Python + uv (dependency management)
 
@@ -361,5 +360,5 @@ VERIFICATION_TIMEOUT = 30  # Default: 10 seconds
 
 - **Use DeepSeek for simple tasks**: Complexity 1-4
 - **Reserve Claude for complex work**: Complexity 8-10
-- **Enable MCPorter**: 43% token reduction (optional)
+- **Compile Hekate skills**: On-demand loading reduces token usage
 - **Monitor quota daily**: Set up alerts for low quota
