@@ -163,9 +163,9 @@ def format_patterns(patterns):
             # Create feature summary
             feature_parts = []
             if 'complexity' in features:
-                feature_parts.append f"c={features['complexity']}"
+                feature_parts.append(f"c={features['complexity']}")
             if 'tool_type' in features:
-                feature_parts.append f"tool={features['tool_type'][:8]}"
+                feature_parts.append(f"tool={features['tool_type'][:8]}")
 
             feature_str = ', '.join(feature_parts)[:30]
 
